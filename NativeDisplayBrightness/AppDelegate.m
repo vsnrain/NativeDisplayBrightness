@@ -65,8 +65,9 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 @interface AppDelegate ()
 // [tomun
 {
-  NSStatusItem  *_statusItem;
-  NSSlider      *_slider;
+    NSStatusItem  *_statusItem;
+    NSView        *_sliderContainer;
+    NSSlider      *_slider;
 }
 // ]tomun
 @property (weak) IBOutlet NSWindow *window;
@@ -171,24 +172,40 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     _statusItem.menu = [self _createStatusBarMenu];
 }
 
+static const CGFloat SlideWidth = 160;
+static const CGFloat SliderHeight = 22;
+static const CGFloat MenuLeftPadding = 20;
+static const CGFloat MenuRightPadding = 16;
+
 - (NSMenu *)_createStatusBarMenu {
     NSMenu *menu = [[NSMenu alloc] init];
 
+    NSMenuItem *sliderLabelItem =
+    [[NSMenuItem alloc] initWithTitle:@"Brightness:"
+                               action:nil
+                        keyEquivalent:@""];
+    [menu addItem:sliderLabelItem];
+
+    _slider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SlideWidth, SliderHeight)];
+    [_slider setMinValue:0];
+    [_slider setMaxValue:100];
+    [_slider setDoubleValue:_brightness];
+    [_slider setTarget:self];
+    [_slider setAction:@selector(_sliderChanged:)];
+    _sliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SlideWidth + MenuRightPadding, SliderHeight)];
+    [_sliderContainer addSubview:_slider];
     NSMenuItem *sliderItem = [[NSMenuItem alloc] init];
-    _slider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, 0, 160, 16)];
-    sliderItem.view = _slider;
+    sliderItem.view = _sliderContainer;
     [menu addItem:sliderItem];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
     NSMenuItem *about =
-        [[NSMenuItem alloc] initWithTitle:@"About NativeDisplayBrightness..."
+        [[NSMenuItem alloc] initWithTitle:@"About"
                                    action:@selector(_about)
                             keyEquivalent:@""];
     [about setTarget:self];
     [menu addItem:about];
-
-    [menu addItem:[NSMenuItem separatorItem]];
 
     NSMenuItem *quit =
         [[NSMenuItem alloc] initWithTitle:@"Quit"
@@ -209,6 +226,11 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 - (void)_quit
 {
 	[[NSApplication sharedApplication] terminate:self];
+}
+
+- (void)_sliderChanged:(id)sender
+{
+    [self setBrightness:[_slider floatValue]];
 }
 // ]tomun
 
@@ -238,9 +260,11 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     // [self _checkTrusted];
     // [self _registerGlobalKeyboardEvents];
     [self _registerHotKeys];
-	[self _createMenuBarIcon];
     // ]tomun
     [self _loadBrightness];
+    // [tomun
+    [self _createMenuBarIcon];
+    // ]tomun
     [self _registerSignalHandling];
 }
 
@@ -303,6 +327,10 @@ void shutdownSignalHandler(int signal)
             set_control(screenNumber, BRIGHTNESS, value);
         }
     }
+    
+    // [tomun
+    [_slider setDoubleValue:_brightness];
+    // ]tomun
 }
 
 - (float)brightness

@@ -11,12 +11,19 @@
 #import "BezelServices.h"
 #import "OSD.h"
 #include <dlfcn.h>
+#import "DDHotKeyCenter.h" // tomun
+
 @import Carbon;
 
 #pragma mark - constants
 
 static NSString *brightnessValuePreferenceKey = @"brightness";
 static const float brightnessStep = 100/16.f;
+
+// [tomun
+static const UInt32 vkBrightnessUp = 144;
+static const UInt32 vkBrightnessDown = 145;
+// ]tomun
 
 #pragma mark - variables
 
@@ -56,7 +63,12 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 #pragma mark - AppDelegate
 
 @interface AppDelegate ()
-
+// [tomun
+{
+  NSStatusItem  *_statusItem;
+  NSSlider      *_slider;
+}
+// ]tomun
 @property (weak) IBOutlet NSWindow *window;
 @property (nonatomic) float brightness;
 @property (strong, nonatomic) dispatch_source_t signalHandlerSource;
@@ -135,6 +147,71 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     CGEventTapEnable(eventTap, true);
 }
 
+// [tomun
+- (void)_registerHotKeys
+{
+    DDHotKeyCenter *hotKeyCenter = [DDHotKeyCenter sharedHotKeyCenter];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp modifierFlags:0 target:self action:@selector(increaseBrightness) object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown modifierFlags:0 target:self action:@selector(decreaseBrightness) object:nil];
+}
+
+- (void)_createMenuBarIcon
+{
+    NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
+    _statusItem = [statusBar statusItemWithLength:NSSquareStatusItemLength];
+
+    NSImage *icon = [NSImage imageNamed:@"touchBarBrightnessUp"];
+    icon.size = NSMakeSize(18.0, 18.0);
+    icon.template = YES;
+
+    _statusItem.image = icon;
+    _statusItem.highlightMode = YES;
+    _statusItem.enabled = YES;
+
+    _statusItem.menu = [self _createStatusBarMenu];
+}
+
+- (NSMenu *)_createStatusBarMenu {
+    NSMenu *menu = [[NSMenu alloc] init];
+
+    NSMenuItem *sliderItem = [[NSMenuItem alloc] init];
+    _slider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, 0, 160, 16)];
+    sliderItem.view = _slider;
+    [menu addItem:sliderItem];
+
+    [menu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *about =
+        [[NSMenuItem alloc] initWithTitle:@"About NativeDisplayBrightness..."
+                                   action:@selector(_about)
+                            keyEquivalent:@""];
+    [about setTarget:self];
+    [menu addItem:about];
+
+    [menu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *quit =
+        [[NSMenuItem alloc] initWithTitle:@"Quit"
+                                   action:@selector(_quit)
+                            keyEquivalent:@""];
+    [quit setTarget:self];
+    [menu addItem:quit];
+
+    return menu;
+}
+
+- (void)_about
+{
+    [NSApp activateIgnoringOtherApps:YES];
+    [[NSApplication sharedApplication] orderFrontStandardAboutPanel:self];
+}
+
+- (void)_quit
+{
+	[[NSApplication sharedApplication] terminate:self];
+}
+// ]tomun
+
 - (void)_saveBrightness
 {
     [[NSUserDefaults standardUserDefaults] setFloat:self.brightness forKey:brightnessValuePreferenceKey];
@@ -157,8 +234,12 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
         [self _loadOSDFramework];
     }
     [self _configureLoginItem];
-    [self _checkTrusted];
-    [self _registerGlobalKeyboardEvents];
+    // [tomun
+    // [self _checkTrusted];
+    // [self _registerGlobalKeyboardEvents];
+    [self _registerHotKeys];
+	[self _createMenuBarIcon];
+    // ]tomun
     [self _loadBrightness];
     [self _registerSignalHandling];
 }

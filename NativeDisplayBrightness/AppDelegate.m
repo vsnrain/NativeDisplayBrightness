@@ -42,6 +42,20 @@ void set_control(CGDirectDisplayID cdisplay, uint control_id, uint new_value)
     }
 }
 
+// [tomun
+uint get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value)
+{
+    struct DDCReadCommand command;
+    command.control_id = control_id;
+    command.max_value = max_value;
+    command.current_value = 0;
+    
+    if (!DDCRead(cdisplay, &command)){
+        NSLog(@"E: Failed to send DDC command!");
+    }
+    return command.current_value;
+}
+// ]tomun
 
 CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
                              CGEventType type,
@@ -156,6 +170,12 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown modifierFlags:0 target:self action:@selector(decreaseBrightness) object:nil];
 }
 
+- (void)_readBrightness
+{
+    CGDirectDisplayID display = CGSMainDisplayID();
+    _brightness = get_control(display, BRIGHTNESS, 100);
+}
+
 - (void)_createMenuBarIcon
 {
     NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
@@ -259,9 +279,10 @@ static const CGFloat MenuRightPadding = 16;
     // [tomun
     // [self _checkTrusted];
     // [self _registerGlobalKeyboardEvents];
-    [self _registerHotKeys];
+    // [self _loadBrightness];
     // ]tomun
-    [self _loadBrightness];
+    [self _readBrightness];
+    [self _registerHotKeys];
     // [tomun
     [self _createMenuBarIcon];
     // ]tomun
@@ -295,7 +316,7 @@ void shutdownSignalHandler(int signal)
 - (void)_willTerminate
 {
     NSLog(@"willTerminate");
-    [self _saveBrightness];
+    // tomun [self _saveBrightness];
 }
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) sender

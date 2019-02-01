@@ -11,7 +11,9 @@
 #import "BezelServices.h"
 #import "OSD.h"
 #include <dlfcn.h>
-#import "DDHotKeyCenter.h" // tomun
+// [tomun
+#import "DDHotKeyCenter.h"
+// ]tomun
 
 @import Carbon;
 
@@ -280,10 +282,8 @@ static const CGFloat MenuRightPadding = 16;
     // [self _checkTrusted];
     // [self _registerGlobalKeyboardEvents];
     // [self _loadBrightness];
-    // ]tomun
     [self _readBrightness];
     [self _registerHotKeys];
-    // [tomun
     [self _createMenuBarIcon];
     // ]tomun
     [self _registerSignalHandling];
@@ -316,7 +316,9 @@ void shutdownSignalHandler(int signal)
 - (void)_willTerminate
 {
     NSLog(@"willTerminate");
-    // tomun [self _saveBrightness];
+    // [tomun
+    //[self _saveBrightness];
+    // ]tomun
 }
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) sender

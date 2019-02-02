@@ -82,17 +82,25 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 // [tomun
 {
     NSStatusItem  *_statusItem;
-    NSView        *_sliderContainer;
-    NSSlider      *_slider;
+    NSView        *_brightnessSliderContainer;
+    NSSlider      *_brightnessSlider;
+    NSView        *_contrastSliderContainer;
+    NSSlider      *_contrastSlider;
 }
 // ]tomun
 @property (weak) IBOutlet NSWindow *window;
 @property (nonatomic) float brightness;
+// [tomun
+@property (nonatomic) float contrast;
+// ]tomun
 @property (strong, nonatomic) dispatch_source_t signalHandlerSource;
 @end
 
 @implementation AppDelegate
 @synthesize brightness=_brightness;
+// [tomun
+@synthesize contrast=_contrast;
+// ]tomun
 
 - (BOOL)_loadBezelServices
 {
@@ -168,14 +176,33 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 - (void)_registerHotKeys
 {
     DDHotKeyCenter *hotKeyCenter = [DDHotKeyCenter sharedHotKeyCenter];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp modifierFlags:0 target:self action:@selector(increaseBrightness) object:nil];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown modifierFlags:0 target:self action:@selector(decreaseBrightness) object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp
+                              modifierFlags:0
+                                     target:self
+                                     action:@selector(increaseBrightness)
+                                     object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown
+                              modifierFlags:0
+                                     target:self
+                                     action:@selector(decreaseBrightness)
+                                     object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp
+                              modifierFlags:NSShiftKeyMask
+                                     target:self
+                                     action:@selector(increaseContrast)
+                                     object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown
+                              modifierFlags:NSShiftKeyMask
+                                     target:self
+                                     action:@selector(decreaseContrast)
+                                     object:nil];
 }
 
-- (void)_readBrightness
+- (void)_readMonitorSettings
 {
     CGDirectDisplayID display = CGSMainDisplayID();
     _brightness = get_control(display, BRIGHTNESS, 100);
+    _contrast = get_control(display, CONTRAST, 100);
 }
 
 - (void)_createMenuBarIcon
@@ -194,7 +221,7 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     _statusItem.menu = [self _createStatusBarMenu];
 }
 
-static const CGFloat SlideWidth = 160;
+static const CGFloat SliderWidth = 160;
 static const CGFloat SliderHeight = 22;
 static const CGFloat MenuLeftPadding = 20;
 static const CGFloat MenuRightPadding = 16;
@@ -202,23 +229,43 @@ static const CGFloat MenuRightPadding = 16;
 - (NSMenu *)_createStatusBarMenu {
     NSMenu *menu = [[NSMenu alloc] init];
 
+    // Brightness
     NSMenuItem *sliderLabelItem =
     [[NSMenuItem alloc] initWithTitle:@"Brightness:"
                                action:nil
                         keyEquivalent:@""];
     [menu addItem:sliderLabelItem];
 
-    _slider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SlideWidth, SliderHeight)];
-    [_slider setMinValue:0];
-    [_slider setMaxValue:100];
-    [_slider setDoubleValue:_brightness];
-    [_slider setTarget:self];
-    [_slider setAction:@selector(_sliderChanged:)];
-    _sliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SlideWidth + MenuRightPadding, SliderHeight)];
-    [_sliderContainer addSubview:_slider];
+    _brightnessSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SliderWidth, SliderHeight)];
+    [_brightnessSlider setMinValue:0];
+    [_brightnessSlider setMaxValue:100];
+    [_brightnessSlider setDoubleValue:_brightness];
+    [_brightnessSlider setTarget:self];
+    [_brightnessSlider setAction:@selector(_brightnessSliderChanged:)];
+    _brightnessSliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SliderWidth + MenuRightPadding, SliderHeight)];
+    [_brightnessSliderContainer addSubview:_brightnessSlider];
     NSMenuItem *sliderItem = [[NSMenuItem alloc] init];
-    sliderItem.view = _sliderContainer;
+    sliderItem.view = _brightnessSliderContainer;
     [menu addItem:sliderItem];
+
+    // Contrast
+    NSMenuItem *contrastSliderLabelItem =
+    [[NSMenuItem alloc] initWithTitle:@"Contrast:"
+                               action:nil
+                        keyEquivalent:@""];
+    [menu addItem:contrastSliderLabelItem];
+    
+    _contrastSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SliderWidth, SliderHeight)];
+    [_contrastSlider setMinValue:0];
+    [_contrastSlider setMaxValue:100];
+    [_contrastSlider setDoubleValue:_contrast];
+    [_contrastSlider setTarget:self];
+    [_contrastSlider setAction:@selector(_brightnessSliderChanged:)];
+    _contrastSliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SliderWidth + MenuRightPadding, SliderHeight)];
+    [_contrastSliderContainer addSubview:_contrastSlider];
+    NSMenuItem *contrastSliderItem = [[NSMenuItem alloc] init];
+    contrastSliderItem.view = _contrastSliderContainer;
+    [menu addItem:contrastSliderItem];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
@@ -250,9 +297,13 @@ static const CGFloat MenuRightPadding = 16;
 	[[NSApplication sharedApplication] terminate:self];
 }
 
-- (void)_sliderChanged:(id)sender
+- (void)_brightnessSliderChanged:(id)sender
 {
-    [self setBrightness:[_slider floatValue]];
+    if (sender == _brightnessSlider) {
+        [self setBrightness:[_brightnessSlider floatValue]];
+    } else if (sender == _contrastSlider) {
+        [self setContrast:[_contrastSlider floatValue]];
+    }
 }
 // ]tomun
 
@@ -282,7 +333,7 @@ static const CGFloat MenuRightPadding = 16;
     // [self _checkTrusted];
     // [self _registerGlobalKeyboardEvents];
     // [self _loadBrightness];
-    [self _readBrightness];
+    [self _readMonitorSettings];
     [self _registerHotKeys];
     [self _createMenuBarIcon];
     // ]tomun
@@ -352,7 +403,7 @@ void shutdownSignalHandler(int signal)
     }
     
     // [tomun
-    [_slider setDoubleValue:_brightness];
+    [_brightnessSlider setDoubleValue:_brightness];
     // ]tomun
 }
 
@@ -371,5 +422,36 @@ void shutdownSignalHandler(int signal)
     self.brightness = MAX(self.brightness-brightnessStep,0);
 }
 
+// [tomun
+- (void)setContrast:(float)value
+{
+    _contrast = value;
 
+    for (NSScreen *screen in NSScreen.screens) {
+        NSDictionary *description = [screen deviceDescription];
+        if ([description objectForKey:@"NSDeviceIsScreen"]) {
+            CGDirectDisplayID screenNumber = [[description objectForKey:@"NSScreenNumber"] unsignedIntValue];
+            
+            set_control(screenNumber, CONTRAST, value);
+        }
+    }
+    
+    [_contrastSlider setDoubleValue:_contrast];
+}
+
+- (float)contrast
+{
+    return _contrast;
+}
+
+- (void)increaseContrast
+{
+    self.contrast = MIN(self.contrast+brightnessStep,100);
+}
+
+- (void)decreaseContrast
+{
+    self.contrast = MAX(self.contrast-brightnessStep,0);
+}
+// ]tomun
 @end

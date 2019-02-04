@@ -45,7 +45,7 @@ void set_control(CGDirectDisplayID cdisplay, uint control_id, uint new_value)
 }
 
 // [tomun
-uint get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value)
+BOOL get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value, uint *value)
 {
     struct DDCReadCommand command;
     command.control_id = control_id;
@@ -54,8 +54,10 @@ uint get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value)
     
     if (!DDCRead(cdisplay, &command)){
         NSLog(@"E: Failed to send DDC command!");
+        return NO;
     }
-    return command.current_value;
+    *value = command.current_value;
+    return YES;
 }
 // ]tomun
 
@@ -201,8 +203,24 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 - (void)_readMonitorSettings
 {
     CGDirectDisplayID display = CGSMainDisplayID();
-    _brightness = get_control(display, BRIGHTNESS, 100);
-    _contrast = get_control(display, CONTRAST, 100);
+    uint value;
+    BOOL success = get_control(display, BRIGHTNESS, 100, &value);
+    if (success) {
+        _brightness = value;
+        success = get_control(display, CONTRAST, 100, &value);
+        if (success) {
+            _contrast = value;
+        }
+    }
+    
+    if (!success) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert setMessageText:@"Could not read the monitor settings."];
+        [alert setInformativeText:@"Your monitor needs to support DDC/CI for this application to work."];
+        [alert addButtonWithTitle:@"OK"];
+        [alert setAlertStyle:NSAlertStyleCritical];
+        [alert runModal];
+    }
 }
 
 - (void)_createMenuBarIcon

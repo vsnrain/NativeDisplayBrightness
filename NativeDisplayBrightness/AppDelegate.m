@@ -269,6 +269,15 @@ static const CGFloat MenuRightPadding = 16;
 
     [menu addItem:[NSMenuItem separatorItem]];
 
+    NSMenuItem *reset =
+    [[NSMenuItem alloc] initWithTitle:@"Reset"
+                               action:@selector(_reset)
+                        keyEquivalent:@""];
+    [reset setTarget:self];
+    [menu addItem:reset];
+
+    [menu addItem:[NSMenuItem separatorItem]];
+
     NSMenuItem *about =
         [[NSMenuItem alloc] initWithTitle:@"About"
                                    action:@selector(_about)
@@ -284,6 +293,12 @@ static const CGFloat MenuRightPadding = 16;
     [menu addItem:quit];
 
     return menu;
+}
+
+- (void)_reset
+{
+    [self setBrightness:75];
+    [self setContrast:75];
 }
 
 - (void)_about

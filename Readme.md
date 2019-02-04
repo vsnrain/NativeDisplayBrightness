@@ -16,7 +16,7 @@ When holding the Shift key the increase/decrease brightness keys will cause the 
 
 Click on the application's menu bar icon to show a menu where the brightness and contrast may also be adjusted via sliders.
 
-![menu UI](menuUI.png)
+![menu UI](menuUI-light.png)
 
 ## License
 

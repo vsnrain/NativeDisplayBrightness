@@ -127,7 +127,7 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 {
     NSURL *bundleURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
     LSSharedFileListRef loginItemsListRef = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-    NSDictionary *properties = @{@"com.apple.loginitem.HideOnLaunch": @YES};
+    NSDictionary *properties = @{@"com.apple.loginitem.HideOnLaunch": @NO}; // tomun: YES->NO
     LSSharedFileListInsertItemURL(loginItemsListRef, kLSSharedFileListItemLast, NULL, NULL, (__bridge CFURLRef)bundleURL, (__bridge CFDictionaryRef)properties,NULL);
 }
 

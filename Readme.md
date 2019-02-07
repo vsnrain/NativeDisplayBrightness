@@ -4,7 +4,7 @@ This is a fork of [https://github.com/Bensge/NativeDisplayBrightness](https://gi
 
 *Control your desktop monitor brightness just like on a MacBook!*
 
-![native brightness UI](nativeUI.png)
+![native brightness UI](nativeUI.gif)
 
 This is a utility application to control monitor brightness with the increase brightness key <kbd>🔆/F1</kbd> and decrease brightness <kbd>🔅/F2</kbd> keys on an Apple keyboard. It utilizes DDC/CI, but this app doesn't have the freezing issues that similar aplications tend to suffer from.
 

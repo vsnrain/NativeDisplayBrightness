@@ -6,7 +6,7 @@ This is a fork of [https://github.com/Bensge/NativeDisplayBrightness](https://gi
 
 ![native brightness UI](nativeUI.gif)
 
-This is a utility application to control monitor brightness with the increase brightness key <kbd>🔆F1</kbd> and decrease brightness <kbd>🔅F2</kbd> keys on an Apple keyboard. It utilizes DDC/CI, but this app doesn't have the freezing issues that similar aplications tend to suffer from.
+This is a utility application to control monitor brightness with the decrease brightness key <kbd>🔅F1</kbd> and increase brightness <kbd>🔆F2</kbd> keys on  an Apple keyboard. It utilizes DDC/CI, but this app doesn't have the freezing issues that similar aplications tend to suffer from.
 
 This app also shows the **native** system UI when changing brightness! It uses the private `BezelServices` framework for this.
 

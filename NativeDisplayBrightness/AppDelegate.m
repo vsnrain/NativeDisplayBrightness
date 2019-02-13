@@ -174,7 +174,7 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
 {
     BOOL found = FindLoginItem(^(LSSharedFileListRef list, LSSharedFileListItemRef item, NSURL *url){
         if (LSSharedFileListItemRemove(list, item) != noErr) {
-            NSLog(@"%s: Failed removing entry \"%s\" from shared file list for session login items", __FUNCTION__, url);
+            NSLog(@"%s: Failed removing entry \"%@\" from shared file list for session login items", __FUNCTION__, url);
         }
     });
     assert(found);

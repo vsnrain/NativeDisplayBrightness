@@ -88,6 +88,7 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     NSSlider      *_brightnessSlider;
     NSView        *_contrastSliderContainer;
     NSSlider      *_contrastSlider;
+    NSMenuItem 	  *_openAtLogin;
 }
 // ]tomun
 @property (weak) IBOutlet NSWindow *window;
@@ -130,6 +131,55 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     NSDictionary *properties = @{@"com.apple.loginitem.HideOnLaunch": @NO}; // tomun: YES->NO
     LSSharedFileListInsertItemURL(loginItemsListRef, kLSSharedFileListItemLast, NULL, NULL, (__bridge CFURLRef)bundleURL, (__bridge CFDictionaryRef)properties,NULL);
 }
+
+// [tomun
+static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileListItemRef item, NSURL *url))
+{
+    BOOL found = NO;
+    NSURL *bundleURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
+    
+    LSSharedFileListRef list = LSSharedFileListCreate(kCFAllocatorDefault, kLSSharedFileListSessionLoginItems, NULL);
+    if (list) {
+        UInt32 seed;
+        CFArrayRef items = LSSharedFileListCopySnapshot(list, &seed);
+        if (items) {
+            for (CFIndex i = 0; i < CFArrayGetCount(items); ++i) {
+                LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(items, i);
+                NSURL *url = (__bridge NSURL *)(LSSharedFileListItemCopyResolvedURL(item, 0, NULL));
+                if ([url isEqual:bundleURL]) {
+                    if (block) {
+                        block(list, item, url);
+                    }
+                    found = YES;
+                    break;
+                }
+            }
+            CFRelease(items);
+        } else {
+            NSLog(@"%s: Failed retrieving entries from shared file list for session login items", __FUNCTION__);
+        }
+        CFRelease(list);
+    } else {
+        NSLog(@"%s: Failed retrieving shared file list for session login items", __FUNCTION__);
+    }
+    return found;
+}
+
+- (BOOL)_hasLoginItem
+{
+    return FindLoginItem(nil);
+}
+
+- (void)_removeLoginItem
+{
+    BOOL found = FindLoginItem(^(LSSharedFileListRef list, LSSharedFileListItemRef item, NSURL *url){
+        if (LSSharedFileListItemRemove(list, item) != noErr) {
+            NSLog(@"%s: Failed removing entry \"%s\" from shared file list for session login items", __FUNCTION__, url);
+        }
+    });
+    assert(found);
+}
+// ]tomun
 
 - (void)_checkTrusted
 {
@@ -232,10 +282,9 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     icon.size = NSMakeSize(18.0, 18.0);
     icon.template = YES;
 
-    _statusItem.image = icon;
-    _statusItem.highlightMode = YES;
-    _statusItem.enabled = YES;
-
+	_statusItem.button.image = icon;
+	_statusItem.button.enabled = YES;
+	
     _statusItem.menu = [self _createStatusBarMenu];
 }
 
@@ -296,6 +345,16 @@ static const CGFloat MenuRightPadding = 16;
 
     [menu addItem:[NSMenuItem separatorItem]];
 
+	_openAtLogin =
+	[[NSMenuItem alloc] initWithTitle:@"Open at login"
+							   action:@selector(_toggleOpenAtLogin)
+						keyEquivalent:@""];
+	[_openAtLogin setTarget:self];
+	[_openAtLogin setState:[self _hasLoginItem] ? NSControlStateValueOn : NSControlStateValueOff];
+	[menu addItem:_openAtLogin];
+
+	[menu addItem:[NSMenuItem separatorItem]];
+
     NSMenuItem *about =
         [[NSMenuItem alloc] initWithTitle:@"About"
                                    action:@selector(_about)
@@ -317,6 +376,17 @@ static const CGFloat MenuRightPadding = 16;
 {
     [self setBrightness:75];
     [self setContrast:75];
+}
+
+- (void)_toggleOpenAtLogin
+{
+	if ([_openAtLogin state] == NSControlStateValueOn) {
+		[self _removeLoginItem];
+		[_openAtLogin setState:NSControlStateValueOff];
+	} else {
+		[self _configureLoginItem];
+		[_openAtLogin setState:NSControlStateValueOn];
+	}
 }
 
 - (void)_about
@@ -361,8 +431,8 @@ static const CGFloat MenuRightPadding = 16;
     {
         [self _loadOSDFramework];
     }
-    [self _configureLoginItem];
     // [tomun
+	// [self _configureLoginItem];
     // [self _checkTrusted];
     // [self _registerGlobalKeyboardEvents];
     // [self _loadBrightness];

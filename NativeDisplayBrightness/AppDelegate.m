@@ -143,9 +143,10 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
         UInt32 seed;
         CFArrayRef items = LSSharedFileListCopySnapshot(list, &seed);
         if (items) {
-            for (CFIndex i = 0; i < CFArrayGetCount(items); ++i) {
+            CFIndex size = CFArrayGetCount(items);
+            for (CFIndex i = 0; i < size; i++) {
                 LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(items, i);
-                NSURL *url = (__bridge NSURL *)(LSSharedFileListItemCopyResolvedURL(item, 0, NULL));
+                NSURL *url = (NSURL *)CFBridgingRelease(LSSharedFileListItemCopyResolvedURL(item, 0, NULL));
                 if ([url isEqual:bundleURL]) {
                     if (block) {
                         block(list, item, url);
@@ -278,7 +279,7 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
     NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
     _statusItem = [statusBar statusItemWithLength:NSSquareStatusItemLength];
 
-    NSImage *icon = [NSImage imageNamed:@"touchBarBrightnessUp"];
+    NSImage *icon = [NSImage imageNamed:@"AppIcon"];
     icon.size = NSMakeSize(18.0, 18.0);
     icon.template = YES;
 

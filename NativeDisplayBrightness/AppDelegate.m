@@ -93,17 +93,11 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 // ]tomun
 @property (weak) IBOutlet NSWindow *window;
 @property (nonatomic) float brightness;
-// [tomun
-@property (nonatomic) float contrast;
-// ]tomun
 @property (strong, nonatomic) dispatch_source_t signalHandlerSource;
 @end
 
 @implementation AppDelegate
 @synthesize brightness=_brightness;
-// [tomun
-@synthesize contrast=_contrast;
-// ]tomun
 
 - (BOOL)_loadBezelServices
 {
@@ -239,16 +233,6 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
                                      target:self
                                      action:@selector(decreaseBrightness)
                                      object:nil];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp
-                              modifierFlags:NSShiftKeyMask
-                                     target:self
-                                     action:@selector(increaseContrast)
-                                     object:nil];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown
-                              modifierFlags:NSShiftKeyMask
-                                     target:self
-                                     action:@selector(decreaseContrast)
-                                     object:nil];
 }
 
 - (void)_readMonitorSettings
@@ -258,10 +242,6 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
     BOOL success = get_control(display, BRIGHTNESS, 100, &value);
     if (success) {
         _brightness = value;
-        success = get_control(display, CONTRAST, 100, &value);
-        if (success) {
-            _contrast = value;
-        }
     }
     
     if (!success) {
@@ -283,9 +263,9 @@ static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileLi
     icon.size = NSMakeSize(18.0, 18.0);
     icon.template = YES;
 
-	_statusItem.button.image = icon;
-	_statusItem.button.enabled = YES;
-	
+    _statusItem.button.image = icon;
+    _statusItem.button.enabled = YES;
+
     _statusItem.menu = [self _createStatusBarMenu];
 }
 
@@ -316,45 +296,18 @@ static const CGFloat MenuRightPadding = 16;
     sliderItem.view = _brightnessSliderContainer;
     [menu addItem:sliderItem];
 
-    // Contrast
-    NSMenuItem *contrastSliderLabelItem =
-    [[NSMenuItem alloc] initWithTitle:@"Contrast:"
-                               action:nil
-                        keyEquivalent:@""];
-    [menu addItem:contrastSliderLabelItem];
-    
-    _contrastSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SliderWidth, SliderHeight)];
-    [_contrastSlider setMinValue:0];
-    [_contrastSlider setMaxValue:100];
-    [_contrastSlider setDoubleValue:_contrast];
-    [_contrastSlider setTarget:self];
-    [_contrastSlider setAction:@selector(_brightnessSliderChanged:)];
-    _contrastSliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SliderWidth + MenuRightPadding, SliderHeight)];
-    [_contrastSliderContainer addSubview:_contrastSlider];
-    NSMenuItem *contrastSliderItem = [[NSMenuItem alloc] init];
-    contrastSliderItem.view = _contrastSliderContainer;
-    [menu addItem:contrastSliderItem];
-
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *reset =
-    [[NSMenuItem alloc] initWithTitle:@"Reset"
-                               action:@selector(_reset)
+
+    _openAtLogin =
+    [[NSMenuItem alloc] initWithTitle:@"Open at login"
+                               action:@selector(_toggleOpenAtLogin)
                         keyEquivalent:@""];
-    [reset setTarget:self];
-    [menu addItem:reset];
+    [_openAtLogin setTarget:self];
+    [_openAtLogin setState:[self _hasLoginItem] ? NSControlStateValueOn : NSControlStateValueOff];
+    [menu addItem:_openAtLogin];
 
     [menu addItem:[NSMenuItem separatorItem]];
-
-	_openAtLogin =
-	[[NSMenuItem alloc] initWithTitle:@"Open at login"
-							   action:@selector(_toggleOpenAtLogin)
-						keyEquivalent:@""];
-	[_openAtLogin setTarget:self];
-	[_openAtLogin setState:[self _hasLoginItem] ? NSControlStateValueOn : NSControlStateValueOff];
-	[menu addItem:_openAtLogin];
-
-	[menu addItem:[NSMenuItem separatorItem]];
 
     NSMenuItem *about =
         [[NSMenuItem alloc] initWithTitle:@"About"
@@ -371,12 +324,6 @@ static const CGFloat MenuRightPadding = 16;
     [menu addItem:quit];
 
     return menu;
-}
-
-- (void)_reset
-{
-    [self setBrightness:75];
-    [self setContrast:75];
 }
 
 - (void)_toggleOpenAtLogin
@@ -405,8 +352,6 @@ static const CGFloat MenuRightPadding = 16;
 {
     if (sender == _brightnessSlider) {
         [self setBrightness:[_brightnessSlider floatValue]];
-    } else if (sender == _contrastSlider) {
-        [self setContrast:[_contrastSlider floatValue]];
     }
 }
 // ]tomun
@@ -526,36 +471,5 @@ void shutdownSignalHandler(int signal)
     self.brightness = MAX(self.brightness-brightnessStep,0);
 }
 
-// [tomun
-- (void)setContrast:(float)value
-{
-    _contrast = value;
 
-    for (NSScreen *screen in NSScreen.screens) {
-        NSDictionary *description = [screen deviceDescription];
-        if ([description objectForKey:@"NSDeviceIsScreen"]) {
-            CGDirectDisplayID screenNumber = [[description objectForKey:@"NSScreenNumber"] unsignedIntValue];
-            
-            set_control(screenNumber, CONTRAST, value);
-        }
-    }
-    
-    [_contrastSlider setDoubleValue:_contrast];
-}
-
-- (float)contrast
-{
-    return _contrast;
-}
-
-- (void)increaseContrast
-{
-    self.contrast = MIN(self.contrast+brightnessStep,100);
-}
-
-- (void)decreaseContrast
-{
-    self.contrast = MAX(self.contrast-brightnessStep,0);
-}
-// ]tomun
 @end

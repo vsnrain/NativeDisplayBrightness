@@ -9,12 +9,11 @@
 /* Begin PBXBuildFile section */
 		186EB38F22015EF0005ABB50 /* DDHotKeyCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 186EB38B22015EF0005ABB50 /* DDHotKeyCenter.m */; };
 		186EB39022015EF0005ABB50 /* DDHotKeyUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 186EB38D22015EF0005ABB50 /* DDHotKeyUtilities.m */; };
-		186EB392220185EA005ABB50 /* Credits.html in Resources */ = {isa = PBXBuildFile; fileRef = 186EB391220185EA005ABB50 /* Credits.html */; };
 		9DBE37511DB7990900ABE422 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DBE37501DB7990900ABE422 /* AppDelegate.m */; };
 		9DBE37541DB7990900ABE422 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DBE37531DB7990900ABE422 /* main.m */; };
 		9DBE37561DB7990900ABE422 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9DBE37551DB7990900ABE422 /* Assets.xcassets */; };
-		9DBE37591DB7990900ABE422 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9DBE37571DB7990900ABE422 /* MainMenu.xib */; };
 		9DBE37621DB7996100ABE422 /* DDC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9DBE37601DB7996100ABE422 /* DDC.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		B8A94B7E25AE1F4B00F1581A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = B8A94B7D25AE1F4B00F1581A /* MainMenu.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,7 +21,6 @@
 		186EB38C22015EF0005ABB50 /* DDHotKeyCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDHotKeyCenter.h; sourceTree = "<group>"; };
 		186EB38D22015EF0005ABB50 /* DDHotKeyUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDHotKeyUtilities.m; sourceTree = "<group>"; };
 		186EB38E22015EF0005ABB50 /* DDHotKeyUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDHotKeyUtilities.h; sourceTree = "<group>"; };
-		186EB391220185EA005ABB50 /* Credits.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = Credits.html; sourceTree = "<group>"; };
 		9D1F75421DBD44310039345A /* OSD.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OSD.h; sourceTree = "<group>"; };
 		9D1F75431DBD48310039345A /* CoreGraphicsPriv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CoreGraphicsPriv.h; sourceTree = "<group>"; };
 		9DBE374C1DB7990900ABE422 /* NativeDisplayBrightness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NativeDisplayBrightness.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,13 +28,11 @@
 		9DBE37501DB7990900ABE422 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		9DBE37531DB7990900ABE422 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9DBE37551DB7990900ABE422 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		9DBE37581DB7990900ABE422 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		9DBE375A1DB7990900ABE422 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DBE37601DB7996100ABE422 /* DDC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDC.m; sourceTree = "<group>"; };
 		9DBE37611DB7996100ABE422 /* DDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDC.h; sourceTree = "<group>"; };
 		9DBE37631DB79A4000ABE422 /* BezelServices.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezelServices.h; sourceTree = "<group>"; };
-		9DBE37641DB7A87200ABE422 /* Readme.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = Readme.md; path = ../Readme.md; sourceTree = "<group>"; };
-		9DBE37661DB7A9D600ABE422 /* License.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = License.txt; path = ../License.txt; sourceTree = "<group>"; };
+		B8A94B7D25AE1F4B00F1581A /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,21 +76,16 @@
 		9DBE374E1DB7990900ABE422 /* NativeDisplayBrightness */ = {
 			isa = PBXGroup;
 			children = (
+				B8A94B7725AE195800F1581A /* Resources */,
 				186EB38A22015EAD005ABB50 /* DDHotKey */,
-				9DBE374F1DB7990900ABE422 /* AppDelegate.h */,
-				9DBE37501DB7990900ABE422 /* AppDelegate.m */,
-				9DBE37551DB7990900ABE422 /* Assets.xcassets */,
-				9DBE37571DB7990900ABE422 /* MainMenu.xib */,
-				9DBE375A1DB7990900ABE422 /* Info.plist */,
-				9DBE37601DB7996100ABE422 /* DDC.m */,
-				9DBE37641DB7A87200ABE422 /* Readme.md */,
-				9DBE37661DB7A9D600ABE422 /* License.txt */,
-				9DBE37611DB7996100ABE422 /* DDC.h */,
 				9DBE37521DB7990900ABE422 /* Supporting Files */,
-				9DBE37631DB79A4000ABE422 /* BezelServices.h */,
+				9DBE37611DB7996100ABE422 /* DDC.h */,
+				9DBE37601DB7996100ABE422 /* DDC.m */,
 				9D1F75421DBD44310039345A /* OSD.h */,
 				9D1F75431DBD48310039345A /* CoreGraphicsPriv.h */,
-				186EB391220185EA005ABB50 /* Credits.html */,
+				9DBE37631DB79A4000ABE422 /* BezelServices.h */,
+				9DBE374F1DB7990900ABE422 /* AppDelegate.h */,
+				9DBE37501DB7990900ABE422 /* AppDelegate.m */,
 			);
 			path = NativeDisplayBrightness;
 			sourceTree = "<group>";
@@ -103,8 +94,18 @@
 			isa = PBXGroup;
 			children = (
 				9DBE37531DB7990900ABE422 /* main.m */,
+				9DBE375A1DB7990900ABE422 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		B8A94B7725AE195800F1581A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9DBE37551DB7990900ABE422 /* Assets.xcassets */,
+				B8A94B7D25AE1F4B00F1581A /* MainMenu.xib */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -133,7 +134,7 @@
 		9DBE37441DB7990900ABE422 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1010;
+				LastUpgradeCheck = 1230;
 				ORGANIZATIONNAME = "Benno Krauss";
 				TargetAttributes = {
 					9DBE374B1DB7990900ABE422 = {
@@ -144,11 +145,10 @@
 			};
 			buildConfigurationList = 9DBE37471DB7990900ABE422 /* Build configuration list for PBXProject "NativeDisplayBrightness" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 			);
 			mainGroup = 9DBE37431DB7990900ABE422;
 			productRefGroup = 9DBE374D1DB7990900ABE422 /* Products */;
@@ -166,8 +166,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9DBE37561DB7990900ABE422 /* Assets.xcassets in Resources */,
-				186EB392220185EA005ABB50 /* Credits.html in Resources */,
-				9DBE37591DB7990900ABE422 /* MainMenu.xib in Resources */,
+				B8A94B7E25AE1F4B00F1581A /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,17 +186,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		9DBE37571DB7990900ABE422 /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				9DBE37581DB7990900ABE422 /* Base */,
-			);
-			name = MainMenu.xib;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		9DBE375B1DB7990900ABE422 /* Debug */ = {
@@ -224,6 +212,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -280,6 +269,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

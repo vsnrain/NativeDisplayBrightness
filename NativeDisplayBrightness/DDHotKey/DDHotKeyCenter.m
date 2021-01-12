@@ -108,7 +108,7 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
         
 		EventTypeSpec eventSpec;
 		eventSpec.eventClass = kEventClassKeyboard;
-		eventSpec.eventKind = kEventHotKeyPressed; // tomun kEventHotKeyReleased;
+		eventSpec.eventKind = kEventHotKeyPressed;
 		InstallApplicationEventHandler(&dd_hotKeyHandler, 1, &eventSpec, NULL, NULL);
     });
     return sharedHotKeyCenter;
@@ -185,7 +185,10 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
 
 - (DDHotKey *)registerHotKeyWithKeyCode:(unsigned short)keyCode modifierFlags:(NSUInteger)flags task:(DDHotKeyTask)task {
     //we can't add a new hotkey if something already has this combo
-    if ([self hasRegisteredHotKeyWithKeyCode:keyCode modifierFlags:flags]) { return nil /*tomun NO*/; }
+    if ([self hasRegisteredHotKeyWithKeyCode:keyCode modifierFlags:flags])
+    {
+        return nil;
+    }
     
     DDHotKey *newHotKey = [[DDHotKey alloc] init];
     [newHotKey _setTask:task];
@@ -197,7 +200,10 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
 
 - (DDHotKey *)registerHotKeyWithKeyCode:(unsigned short)keyCode modifierFlags:(NSUInteger)flags target:(id)target action:(SEL)action object:(id)object {
     //we can't add a new hotkey if something already has this combo
-    if ([self hasRegisteredHotKeyWithKeyCode:keyCode modifierFlags:flags]) { return nil /*tomun NO*/; }
+    if ([self hasRegisteredHotKeyWithKeyCode:keyCode modifierFlags:flags])
+    {
+        return nil;
+    }
     
     //build the hotkey object:
     DDHotKey *newHotKey = [[DDHotKey alloc] init];
@@ -266,7 +272,7 @@ OSStatus dd_hotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEvent, vo
         DDHotKey *matchingHotKey = [matchingHotKeys anyObject];
         
         NSEvent *event = [NSEvent eventWithEventRef:theEvent];
-        NSEvent *keyEvent = [NSEvent keyEventWithType:NSKeyDown // tomun NSKeyUp
+        NSEvent *keyEvent = [NSEvent keyEventWithType:NSKeyUp
                                              location:[event locationInWindow]
                                         modifierFlags:[event modifierFlags]
                                             timestamp:[event timestamp]

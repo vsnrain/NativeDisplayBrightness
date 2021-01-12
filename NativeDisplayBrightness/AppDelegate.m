@@ -10,28 +10,15 @@
 #import "DDC.h"
 #import "BezelServices.h"
 #import "OSD.h"
-#include <dlfcn.h>
-// [tomun
 #import "DDHotKeyCenter.h"
-// ]tomun
+
+#include <dlfcn.h>
 
 @import Carbon;
 
-#pragma mark - constants
-
-static NSString *brightnessValuePreferenceKey = @"brightness";
-static const float brightnessStep = 100/16.f;
-
-// [tomun
-static const UInt32 vkBrightnessUp = 144;
-static const UInt32 vkBrightnessDown = 145;
-// ]tomun
-
-#pragma mark - variables
-
 void *(*_BSDoGraphicWithMeterAndTimeout)(CGDirectDisplayID arg0, BSGraphic arg1, int arg2, float v, int timeout) = NULL;
 
-#pragma mark - functions
+#pragma mark - DDC
 
 void set_control(CGDirectDisplayID cdisplay, uint control_id, uint new_value)
 {
@@ -44,8 +31,7 @@ void set_control(CGDirectDisplayID cdisplay, uint control_id, uint new_value)
     }
 }
 
-// [tomun
-BOOL get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value, uint *value)
+uint get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value)
 {
     struct DDCReadCommand command;
     command.control_id = control_id;
@@ -54,43 +40,14 @@ BOOL get_control(CGDirectDisplayID cdisplay, uint control_id, uint max_value, ui
     
     if (!DDCRead(cdisplay, &command)){
         NSLog(@"E: Failed to send DDC command!");
-        return NO;
     }
-    *value = command.current_value;
-    return YES;
-}
-// ]tomun
-
-CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
-                             CGEventType type,
-                             CGEventRef event,
-                             void *refcon)
-{
-    //Surpress the F1/F2 key events to prevent other applications from catching it or playing beep sound
-    if (type == NX_KEYDOWN || type == NX_KEYUP || type == NX_FLAGSCHANGED)
-    {
-        int64_t keyCode = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-        if (keyCode == kVK_F2 || keyCode == kVK_F1)
-        {
-            return NULL;
-        }
-    }
-    return event;
+    return command.current_value;
 }
 
 #pragma mark - AppDelegate
 
 @interface AppDelegate ()
-// [tomun
-{
-    NSStatusItem  *_statusItem;
-    NSView        *_brightnessSliderContainer;
-    NSSlider      *_brightnessSlider;
-    NSView        *_contrastSliderContainer;
-    NSSlider      *_contrastSlider;
-    NSMenuItem 	  *_openAtLogin;
-}
-// ]tomun
+
 @property (weak) IBOutlet NSWindow *window;
 @property (nonatomic) float brightness;
 @property (strong, nonatomic) dispatch_source_t signalHandlerSource;
@@ -98,6 +55,8 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
 
 @implementation AppDelegate
 @synthesize brightness=_brightness;
+
+static const float brightnessStep = 100/16.f;
 
 - (BOOL)_loadBezelServices
 {
@@ -118,257 +77,17 @@ CGEventRef keyboardCGEventCallback(CGEventTapProxy proxy,
     return [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/OSD.framework"] load];
 }
 
-- (void)_configureLoginItem
-{
-    NSURL *bundleURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
-    LSSharedFileListRef loginItemsListRef = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-    NSDictionary *properties = @{@"com.apple.loginitem.HideOnLaunch": @NO}; // tomun: YES->NO
-    LSSharedFileListInsertItemURL(loginItemsListRef, kLSSharedFileListItemLast, NULL, NULL, (__bridge CFURLRef)bundleURL, (__bridge CFDictionaryRef)properties,NULL);
-}
-
-// [tomun
-static BOOL FindLoginItem(void (^block)(LSSharedFileListRef list, LSSharedFileListItemRef item, NSURL *url))
-{
-    BOOL found = NO;
-    NSURL *bundleURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
-    
-    LSSharedFileListRef list = LSSharedFileListCreate(kCFAllocatorDefault, kLSSharedFileListSessionLoginItems, NULL);
-    if (list) {
-        UInt32 seed;
-        CFArrayRef items = LSSharedFileListCopySnapshot(list, &seed);
-        if (items) {
-            CFIndex size = CFArrayGetCount(items);
-            for (CFIndex i = 0; i < size; i++) {
-                LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(items, i);
-                NSURL *url = (NSURL *)CFBridgingRelease(LSSharedFileListItemCopyResolvedURL(item, 0, NULL));
-                if ([url isEqual:bundleURL]) {
-                    if (block) {
-                        block(list, item, url);
-                    }
-                    found = YES;
-                    break;
-                }
-            }
-            CFRelease(items);
-        } else {
-            NSLog(@"%s: Failed retrieving entries from shared file list for session login items", __FUNCTION__);
-        }
-        CFRelease(list);
-    } else {
-        NSLog(@"%s: Failed retrieving shared file list for session login items", __FUNCTION__);
-    }
-    return found;
-}
-
-- (BOOL)_hasLoginItem
-{
-    return FindLoginItem(nil);
-}
-
-- (void)_removeLoginItem
-{
-    BOOL found = FindLoginItem(^(LSSharedFileListRef list, LSSharedFileListItemRef item, NSURL *url){
-        if (LSSharedFileListItemRemove(list, item) != noErr) {
-            NSLog(@"%s: Failed removing entry \"%@\" from shared file list for session login items", __FUNCTION__, url);
-        }
-    });
-    assert(found);
-}
-// ]tomun
-
-- (void)_checkTrusted
-{
-    BOOL isTrusted = AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @true});
-    NSLog(@"istrusted: %i",isTrusted);
-}
-
-- (void)_registerGlobalKeyboardEvents
-{
-    [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventMaskKeyDown | NSEventMaskKeyUp handler:^(NSEvent *_Nonnull event) {
-        //NSLog(@"event!!");
-        if (event.keyCode == kVK_F1)
-        {
-            if (event.type == NSEventTypeKeyDown)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self decreaseBrightness];
-                });
-            }
-        }
-        else if (event.keyCode == kVK_F2)
-        {
-            if (event.type == NSEventTypeKeyDown)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self increaseBrightness];
-                });
-            }
-        }
-    }];
-    
-    CFRunLoopRef runloop = (CFRunLoopRef)CFRunLoopGetCurrent();
-    CGEventMask interestedEvents = NX_KEYDOWNMASK | NX_KEYUPMASK | NX_FLAGSCHANGEDMASK;
-    CFMachPortRef eventTap = CGEventTapCreate(kCGAnnotatedSessionEventTap, kCGHeadInsertEventTap,
-                                              kCGEventTapOptionDefault, interestedEvents, keyboardCGEventCallback, (__bridge void * _Nullable)(self));
-    // by passing self as last argument, you can later send events to this class instance
-    
-    CFRunLoopSourceRef source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault,
-                                                              eventTap, 0);
-    CFRunLoopAddSource((CFRunLoopRef)runloop, source, kCFRunLoopCommonModes);
-    
-    CGEventTapEnable(eventTap, true);
-}
-
-// [tomun
 - (void)_registerHotKeys
 {
     DDHotKeyCenter *hotKeyCenter = [DDHotKeyCenter sharedHotKeyCenter];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessUp
-                              modifierFlags:0
-                                     target:self
-                                     action:@selector(increaseBrightness)
-                                     object:nil];
-    [hotKeyCenter registerHotKeyWithKeyCode:vkBrightnessDown
-                              modifierFlags:0
-                                     target:self
-                                     action:@selector(decreaseBrightness)
-                                     object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:144 modifierFlags:0 target:self action:@selector(increaseBrightness) object:nil];
+    [hotKeyCenter registerHotKeyWithKeyCode:145 modifierFlags:0 target:self action:@selector(decreaseBrightness) object:nil];
 }
 
-- (void)_readMonitorSettings
+- (void)_readBrightness
 {
     CGDirectDisplayID display = CGSMainDisplayID();
-    uint value;
-    BOOL success = get_control(display, BRIGHTNESS, 100, &value);
-    if (success) {
-        _brightness = value;
-    }
-    
-    if (!success) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert setMessageText:@"Could not read the monitor settings."];
-        [alert setInformativeText:@"Your monitor needs to support DDC/CI for this application to work."];
-        [alert addButtonWithTitle:@"OK"];
-        [alert setAlertStyle:NSAlertStyleCritical];
-        [alert runModal];
-    }
-}
-
-- (void)_createMenuBarIcon
-{
-    NSStatusBar *statusBar = [NSStatusBar systemStatusBar];
-    _statusItem = [statusBar statusItemWithLength:NSSquareStatusItemLength];
-
-    NSImage *icon = [NSImage imageNamed:@"AppIcon"];
-    icon.size = NSMakeSize(18.0, 18.0);
-    icon.template = YES;
-
-    _statusItem.button.image = icon;
-    _statusItem.button.enabled = YES;
-
-    _statusItem.menu = [self _createStatusBarMenu];
-}
-
-static const CGFloat SliderWidth = 160;
-static const CGFloat SliderHeight = 22;
-static const CGFloat MenuLeftPadding = 20;
-static const CGFloat MenuRightPadding = 16;
-
-- (NSMenu *)_createStatusBarMenu {
-    NSMenu *menu = [[NSMenu alloc] init];
-
-    // Brightness
-    NSMenuItem *sliderLabelItem =
-    [[NSMenuItem alloc] initWithTitle:@"Brightness:"
-                               action:nil
-                        keyEquivalent:@""];
-    [menu addItem:sliderLabelItem];
-
-    _brightnessSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(MenuLeftPadding, 0, SliderWidth, SliderHeight)];
-    [_brightnessSlider setMinValue:0];
-    [_brightnessSlider setMaxValue:100];
-    [_brightnessSlider setDoubleValue:_brightness];
-    [_brightnessSlider setTarget:self];
-    [_brightnessSlider setAction:@selector(_brightnessSliderChanged:)];
-    _brightnessSliderContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, MenuLeftPadding + SliderWidth + MenuRightPadding, SliderHeight)];
-    [_brightnessSliderContainer addSubview:_brightnessSlider];
-    NSMenuItem *sliderItem = [[NSMenuItem alloc] init];
-    sliderItem.view = _brightnessSliderContainer;
-    [menu addItem:sliderItem];
-
-    [menu addItem:[NSMenuItem separatorItem]];
-
-
-    _openAtLogin =
-    [[NSMenuItem alloc] initWithTitle:@"Open at login"
-                               action:@selector(_toggleOpenAtLogin)
-                        keyEquivalent:@""];
-    [_openAtLogin setTarget:self];
-    [_openAtLogin setState:[self _hasLoginItem] ? NSControlStateValueOn : NSControlStateValueOff];
-    [menu addItem:_openAtLogin];
-
-    [menu addItem:[NSMenuItem separatorItem]];
-
-    NSMenuItem *about =
-        [[NSMenuItem alloc] initWithTitle:@"About"
-                                   action:@selector(_about)
-                            keyEquivalent:@""];
-    [about setTarget:self];
-    [menu addItem:about];
-
-    NSMenuItem *quit =
-        [[NSMenuItem alloc] initWithTitle:@"Quit"
-                                   action:@selector(_quit)
-                            keyEquivalent:@""];
-    [quit setTarget:self];
-    [menu addItem:quit];
-
-    return menu;
-}
-
-- (void)_toggleOpenAtLogin
-{
-	if ([_openAtLogin state] == NSControlStateValueOn) {
-		[self _removeLoginItem];
-		[_openAtLogin setState:NSControlStateValueOff];
-	} else {
-		[self _configureLoginItem];
-		[_openAtLogin setState:NSControlStateValueOn];
-	}
-}
-
-- (void)_about
-{
-    [NSApp activateIgnoringOtherApps:YES];
-    [[NSApplication sharedApplication] orderFrontStandardAboutPanel:self];
-}
-
-- (void)_quit
-{
-	[[NSApplication sharedApplication] terminate:self];
-}
-
-- (void)_brightnessSliderChanged:(id)sender
-{
-    if (sender == _brightnessSlider) {
-        [self setBrightness:[_brightnessSlider floatValue]];
-    }
-}
-// ]tomun
-
-- (void)_saveBrightness
-{
-    [[NSUserDefaults standardUserDefaults] setFloat:self.brightness forKey:brightnessValuePreferenceKey];
-}
-
-- (void)_loadBrightness
-{
-    [[NSUserDefaults standardUserDefaults] registerDefaults:@{
-        brightnessValuePreferenceKey: @(8*brightnessStep)
-    }];
-    
-    _brightness = [[NSUserDefaults standardUserDefaults] floatForKey:brightnessValuePreferenceKey];
-    NSLog(@"Loaded value: %f",_brightness);
+    _brightness = get_control(display, BRIGHTNESS, 100);
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -377,21 +96,14 @@ static const CGFloat MenuRightPadding = 16;
     {
         [self _loadOSDFramework];
     }
-    // [tomun
-	// [self _configureLoginItem];
-    // [self _checkTrusted];
-    // [self _registerGlobalKeyboardEvents];
-    // [self _loadBrightness];
-    [self _readMonitorSettings];
+
+    [self _readBrightness];
     [self _registerHotKeys];
-    [self _createMenuBarIcon];
-    // ]tomun
     [self _registerSignalHandling];
 }
 
 void shutdownSignalHandler(int signal)
 {
-    //Don't do anything
 }
 
 - (void)_registerSignalHandling
@@ -403,10 +115,10 @@ void shutdownSignalHandler(int signal)
         [[NSApplication sharedApplication] terminate:self];
     });
     dispatch_resume(self.signalHandlerSource);
+    
     //Register signal handler that will prevent the app from being killed
     signal(SIGTERM, shutdownSignalHandler);
 }
-
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
@@ -416,9 +128,6 @@ void shutdownSignalHandler(int signal)
 - (void)_willTerminate
 {
     NSLog(@"willTerminate");
-    // [tomun
-    //[self _saveBrightness];
-    // ]tomun
 }
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication*) sender
@@ -450,10 +159,6 @@ void shutdownSignalHandler(int signal)
             set_control(screenNumber, BRIGHTNESS, value);
         }
     }
-    
-    // [tomun
-    [_brightnessSlider setDoubleValue:_brightness];
-    // ]tomun
 }
 
 - (float)brightness
@@ -470,6 +175,5 @@ void shutdownSignalHandler(int signal)
 {
     self.brightness = MAX(self.brightness-brightnessStep,0);
 }
-
 
 @end

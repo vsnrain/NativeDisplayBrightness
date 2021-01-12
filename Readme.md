@@ -1,22 +1,16 @@
 # NativeDisplayBrightness
 
-This is a fork of [https://github.com/Bensge/NativeDisplayBrightness](https://github.com/Bensge/NativeDisplayBrightness) by Benno Krauss.
+This is a fork of [https://github.com/tomun/NativeDisplayBrightness](https://github.com/tomun/NativeDisplayBrightness) by Tom Underhill.
 
 *Control your desktop monitor brightness just like on a MacBook!*
 
-![native brightness UI](nativeUI.gif)
+![native brightness UI](https://raw.githubusercontent.com/vsnrain/NativeDisplayBrightness/master/image.png)
 
-This is a utility application to control monitor brightness with the decrease brightness key <kbd>🔅F1</kbd> and increase brightness <kbd>🔆F2</kbd> keys on  an Apple keyboard. It utilizes DDC/CI, but this app doesn't have the freezing issues that similar aplications tend to suffer from.
+This a utility application to control monitor brightness with the <brightness-up>, <brightness-down> keys. It utilizes DDC/CI, but this app doesn't have the freezing issues that similar applications tend to suffer from.
 
 This app also shows the **native** system UI when changing brightness! It uses the private `BezelServices` framework for this.
 
 Needless to say, your monitor needs to support DDC/CI for this app to work.
-
-When holding the Shift key the increase/decrease brightness keys will cause the monitor contrast to increase or decrease.
-
-Click on the application's menu bar icon to show a menu where the brightness and contrast may also be adjusted via sliders.
-
-![menu UI](menuUI-light.png)
 
 ## License
 
